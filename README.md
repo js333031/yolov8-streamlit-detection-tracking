@@ -1,6 +1,6 @@
-# <span style="color:deepskyblue"> Real-time Object Detection and Tracking with YOLOv8 & Streamlit </span>
+# <span style="color:deepskyblue"> Real-time Object Detection and Tracking with YOLOv8, YOLOv11 & Streamlit </span>
 
-This repository is an extensive open-source project showcasing the seamless integration of **object detection and tracking** using **YOLOv8** (object detection algorithm), along with **Streamlit** (a popular Python web application framework for creating interactive web apps). The project offers a user-friendly and customizable interface designed to detect and track objects in real-time video streams from sources such as RTSP, UDP, and YouTube URLs, as well as static videos and images.
+This repository is an extensive open-source project showcasing the seamless integration of **object detection and tracking** using **YOLOv8, YOLOv11** (object detection algorithm), along with **Streamlit** (a popular Python web application framework for creating interactive web apps) and **OpenVINO**. The project offers a user-friendly and customizable interface designed to detect and track objects in real-time video streams from sources such as RTSP, UDP, and YouTube URLs, as well as static videos and images.
 
 
 ## <span style="color:deepskyblue">Explore Implementation Details on Medium (3 parts blog series) </span>
@@ -45,28 +45,40 @@ This app is up and running on Streamlit cloud server!!! You can check the demo o
 Python 3.6+
 YOLOv8
 Streamlit
-
+etc... Use requirements.txt
 ```bash
-pip install ultralytics streamlit pytube
+pip install -r requirements.txt
 ```
 
 ## Installation
 
-- Clone the repository: git clone <https://github.com/CodingMantras/yolov8-streamlit-detection-tracking.git>
+*Setup venv:*
+```bash
+conda create -n demo python=3.11
+
+conda activate demo
+```
+
+*Clone repo, etc:*
+- Clone the repository: `git clone https://github.com/js333031/yolov8-streamlit-detection-tracking.git`
 - Change to the repository directory: `cd yolov8-streamlit-detection-tracking`
-- Create `weights`, `videos`, and `images` directories inside the project.
 - Download the pre-trained YOLOv8 weights from (<https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt>) and save them to the `weights` directory in the same project.
+- The application can also download the models and convert to OpenVINO format through the UI. When a model name is selected, the model will be downloaded and converted to OpenVINO format
 
 ## Usage
 
 - Run the app with the following command: `streamlit run app.py`
 - The app should open in a new browser window.
 
-### ML Model Config
+### DL Model Config
 
+- Select a model - if the model is not downloaded, it should get downloaded and converted to OpenVINO format. Check the console output
 - Select task (Detection, Segmentation)
 - Select model confidence
-- Use the slider to adjust the confidence threshold (25-100) for the model.
+    - Use the slider to adjust the confidence threshold (25-100) for the model.
+- Select inference engine (Ultralytics or OpenVINO backend within Ultralytics)
+- Select inference engine device (CPU or Intel GPU) - used if inference engine is OpenVINO
+
 
 One the model config is done, select a source.
 
@@ -85,25 +97,13 @@ One the model config is done, select a source.
 - In `settings.py` edit the following lines.
 
 ```python
-# video
-VIDEO_DIR = ROOT / 'videos' # After creating the videos folder
-
-# Suppose you have four videos inside videos folder
-# Edit the name of video_1, 2, 3, 4 (with the names of your video files) 
-VIDEO_1_PATH = VIDEO_DIR / 'video_1.mp4' 
-VIDEO_2_PATH = VIDEO_DIR / 'video_2.mp4'
-VIDEO_3_PATH = VIDEO_DIR / 'video_3.mp4'
-VIDEO_4_PATH = VIDEO_DIR / 'video_4.mp4'
-
-# Edit the same names here also.
-VIDEOS_DICT = {
-    'video_1': VIDEO_1_PATH,
-    'video_2': VIDEO_2_PATH,
-    'video_3': VIDEO_3_PATH,
-    'video_4': VIDEO_4_PATH,
-}
-
-# Your videos will start appearing inside streamlit webapp 'Choose a video'.
+        # Videos config
+        self.VIDEO_DIR = self.ROOT / 'videos'
+        self.VIDEOS_DICT = {
+            'video_1': self.VIDEO_DIR / 'video_1.mp4',
+            'video_2': self.VIDEO_DIR / 'video_2.mp4',
+            'video_3': self.VIDEO_DIR / 'video_3.mp4',
+        }
 ```
 
 - Click on `Detect Video Objects` button and the selected task (detection/segmentation) will start on the selected video.
@@ -122,8 +122,9 @@ VIDEOS_DICT = {
 <https://user-images.githubusercontent.com/104087274/226178296-684ad72a-fe5f-4589-b668-95c835cd8d8a.mov>
 
 ## Acknowledgements
+[yolov8-streamlit-detection-tracking](https://github.com/rampal-punia/yolov8-streamlit-detection-tracking) was used as basis for this demo
 
-This app uses [YOLOv8](<https://github.com/ultralytics/ultralytics>) for object detection algorithm and [Streamlit](<https://github.com/streamlit/streamlit>) library for the user interface.
+This app uses [YOLOv8/11](<https://github.com/ultralytics/ultralytics>) for object detection algorithm and [Streamlit](<https://github.com/streamlit/streamlit>) library for the user interface.
 
 ### Disclaimer
 
@@ -133,6 +134,7 @@ This project is intended as a learning exercise and demonstration of integrating
 - YoloV8
 - Object-Detection on Images And Live Video Streams
 - Python-OpenCV
+- OpenVINO as backend to Ultralytics
 
 Please note that this application is not designed or tested for production use. It serves as an educational resource and a showcase of technology integration rather than a production-ready web application.
 
