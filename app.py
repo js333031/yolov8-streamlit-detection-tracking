@@ -11,17 +11,24 @@ import helper
 
 # Setting page layout
 st.set_page_config(
-    page_title="Object Detection using YOLOv8",
+    page_title="Object Detection using YOLO v8/11",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # Main page heading
-st.title("Object Detection And Tracking using YOLOv8")
+st.title("Object Detection And Tracking using YOLO v8/11")
 
 # Sidebar
 st.sidebar.header("ML Model Config")
+
+model_selection = st.sidebar.selectbox(
+        "Choose a model...", settings.MODEL_NAMES)
+
+print(f"Current model selected is {model_selection}")
+settings.update_model_names(model_selection)
+settings.print_model_names()
 
 # Model Options
 model_type = st.sidebar.radio(
@@ -30,15 +37,33 @@ model_type = st.sidebar.radio(
 confidence = float(st.sidebar.slider(
     "Select Model Confidence", 25, 100, 40)) / 100
 
+# Inference engine option
+ie_engine_name = st.sidebar.radio(
+    "Select inference engine", ['OpenVINO', 'Ultralytics']
+    )
+
+ul_model_path=None
 # Selecting Detection Or Segmentation
 if model_type == 'Detection':
-    model_path = Path(settings.DETECTION_MODEL)
+    ul_model_path = Path(settings.DETECTION_MODEL)
+    if ie_engine_name == 'OpenVINO':
+        model_path = Path(settings.DETECTION_MODEL_OV)
+    else:
+        model_path = ul_model_path
 elif model_type == 'Segmentation':
-    model_path = Path(settings.SEGMENTATION_MODEL)
+    ul_model_path = Path(settings.SEGMENTATION_MODEL)
+    if ie_engine_name == 'OpenVINO':
+        model_path = Path(settings.SEGMENTATION_MODEL_OV)
+    else:
+        model_path = ul_model_path
 
 # Load Pre-trained ML Model
 try:
-    model = helper.load_model(model_path)
+    if ie_engine_name == 'OpenVINO':
+        model = helper.load_model_ov(model_path, "GPU")
+    elif ie_engine_name == 'Ultralytics':
+        model = helper.load_model(model_path)
+
 except Exception as ex:
     st.error(f"Unable to load model. Check the specified path: {model_path}")
     st.error(ex)
@@ -80,7 +105,8 @@ if source_radio == settings.IMAGE:
         else:
             if st.sidebar.button('Detect Objects'):
                 res = model.predict(uploaded_image,
-                                    conf=confidence
+                                    conf=confidence,
+                                    device="GPU.1"
                                     )
                 boxes = res[0].boxes
                 res_plotted = res[0].plot()[:, :, ::-1]

@@ -3,6 +3,9 @@ import streamlit as st
 import cv2
 import yt_dlp
 import settings
+import openvino as ov
+import os
+from pathlib import Path
 
 
 def load_model(model_path):
@@ -18,6 +21,46 @@ def load_model(model_path):
     model = YOLO(model_path)
     return model
 
+def load_model_ov(model_path, device):
+    """
+    Loads a YOLO object detection model from the specified model_path.
+
+    Parameters:
+        model_path (str): The path to the YOLO model file.
+
+    Returns:
+        A YOLO object detection model.
+    """
+    p=os.path.dirname(model_path)
+    core = ov.Core()
+    ov_model = core.read_model(model_path)
+    print("Det model path: ", model_path)
+    print("Using model path: ", p)
+    if device != "CPU":
+        ov_model.reshape({0: [1, 3, 640, 640]})
+    if "GPU" in device or ("AUTO" in device and "GPU" in core.available_devices):
+        ov_config = {"GPU_DISABLE_WINOGRAD_CONVOLUTION": "YES"}
+    print(ov_config)
+    ov_compiled_model = core.compile_model(ov_model, device, ov_config)
+
+    ul_det_model = YOLO(model_path.parent, task="detect")
+    if ul_det_model.predictor is None:
+        print("Configuring predictor")
+        custom = {"conf": 0.25, "batch": 1, "save": False, "mode": "predict"}  # method defaults
+        args = {**ul_det_model.overrides, **custom}
+        ul_det_model.predictor = ul_det_model._smart_load("predictor")(overrides=args, _callbacks=ul_det_model.callbacks)
+        ul_det_model.predictor.setup_model(model=ul_det_model.model)
+    
+    ul_det_model.predictor.model.ov_compiled_model = ov_compiled_model
+    return ul_det_model
+
+def convert_modelto_ov(model_path, ul_model_path):
+    if not model_path.exists():
+        model = load_model(ul_model_path)
+        model.export(format="openvino", dynamic=True, half=False)
+
+    ov_model = ov.Core().read_model(model_path)
+    return ov_model
 
 def display_tracker_options():
     display_tracker = st.radio("Display Tracker", ('Yes', 'No'))
@@ -51,7 +94,8 @@ def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=N
         res = model.track(image, conf=conf, persist=True, tracker=tracker)
     else:
         # Predict the objects in the image using the YOLOv8 model
-        res = model.predict(image, conf=conf)
+        print("asdf")
+        res = model.predict(image, conf=conf, device="0", verbose=True)
 
     # # Plot the detected objects on the video frame
     res_plotted = res[0].plot()
@@ -230,7 +274,7 @@ def play_stored_video(conf, model):
                                              st_frame,
                                              image,
                                              is_display_tracker,
-                                             tracker
+                                             tracker,
                                              )
                 else:
                     vid_cap.release()
