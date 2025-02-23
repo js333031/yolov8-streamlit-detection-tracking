@@ -1,13 +1,16 @@
 # Python In-built packages
 from pathlib import Path
 import PIL
+import openvino as ov
 
 # External packages
 import streamlit as st
 
 # Local Modules
-import settings
+from settings import Settings
 import helper
+
+settings = Settings('yolov8n', 'yolov8n-seg')
 
 # Setting page layout
 st.set_page_config(
@@ -42,6 +45,12 @@ ie_engine_name = st.sidebar.radio(
     "Select inference engine", ['OpenVINO', 'Ultralytics']
     )
 
+core = ov.Core()
+
+ov_device = st.sidebar.radio(
+    "Select OpenVINO inference device", core.available_devices
+    )
+
 ul_model_path=None
 # Selecting Detection Or Segmentation
 if model_type == 'Detection':
@@ -60,7 +69,10 @@ elif model_type == 'Segmentation':
 # Load Pre-trained ML Model
 try:
     if ie_engine_name == 'OpenVINO':
-        model = helper.load_model_ov(model_path, "GPU")
+        if model_type == 'Segmentation':
+            model = helper.load_model_ov(model_path, ov_device, "segment")
+        else:
+            model = helper.load_model_ov(model_path, ov_device, "detect")
     elif ie_engine_name == 'Ultralytics':
         model = helper.load_model(model_path)
 
@@ -121,16 +133,16 @@ if source_radio == settings.IMAGE:
                     st.write("No image is uploaded yet!")
 
 elif source_radio == settings.VIDEO:
-    helper.play_stored_video(confidence, model)
+    helper.play_stored_video(confidence, model, settings)
 
 elif source_radio == settings.WEBCAM:
-    helper.play_webcam(confidence, model)
+    helper.play_webcam(confidence, model, settings)
 
 elif source_radio == settings.RTSP:
-    helper.play_rtsp_stream(confidence, model)
+    helper.play_rtsp_stream(confidence, model, settings)
 
 elif source_radio == settings.YOUTUBE:
-    helper.play_youtube_video(confidence, model)
+    helper.play_youtube_video(confidence, model, settings)
 
 else:
     st.error("Please select a valid source type!")

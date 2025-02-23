@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import streamlit as st
 import cv2
 import yt_dlp
-import settings
+#import settings
 import openvino as ov
 import os
 from pathlib import Path
@@ -21,7 +21,7 @@ def load_model(model_path):
     model = YOLO(model_path)
     return model
 
-def load_model_ov(model_path, device):
+def load_model_ov(model_path, device, task="detect"):
     """
     Loads a YOLO object detection model from the specified model_path.
 
@@ -31,6 +31,7 @@ def load_model_ov(model_path, device):
     Returns:
         A YOLO object detection model.
     """
+    ov_config = {}
     p=os.path.dirname(model_path)
     core = ov.Core()
     ov_model = core.read_model(model_path)
@@ -41,9 +42,10 @@ def load_model_ov(model_path, device):
     if "GPU" in device or ("AUTO" in device and "GPU" in core.available_devices):
         ov_config = {"GPU_DISABLE_WINOGRAD_CONVOLUTION": "YES"}
     print(ov_config)
+    print(f"Compiling OV model to {device}")
     ov_compiled_model = core.compile_model(ov_model, device, ov_config)
 
-    ul_det_model = YOLO(model_path.parent, task="detect")
+    ul_det_model = YOLO(model_path.parent, task=task)
     if ul_det_model.predictor is None:
         print("Configuring predictor")
         custom = {"conf": 0.25, "batch": 1, "save": False, "mode": "predict"}  # method defaults
@@ -200,7 +202,7 @@ def play_rtsp_stream(conf, model):
             st.sidebar.error("Error loading RTSP stream: " + str(e))
 
 
-def play_webcam(conf, model):
+def play_webcam(conf, model, settings):
     """
     Plays a webcam stream. Detects Objects in real-time using the YOLOv8 object detection model.
 
@@ -237,7 +239,7 @@ def play_webcam(conf, model):
             st.sidebar.error("Error loading video: " + str(e))
 
 
-def play_stored_video(conf, model):
+def play_stored_video(conf, model, settings):
     """
     Plays a stored video file. Tracks and detects objects in real-time using the YOLOv8 object detection model.
 
@@ -251,6 +253,7 @@ def play_stored_video(conf, model):
     Raises:
         None
     """
+    print(f"Using model {model}")
     source_vid = st.sidebar.selectbox(
         "Choose a video...", settings.VIDEOS_DICT.keys())
 
