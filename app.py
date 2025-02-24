@@ -2,6 +2,7 @@
 from pathlib import Path
 import PIL
 import openvino as ov
+import openvino.properties as props
 
 # External packages
 import streamlit as st
@@ -46,9 +47,30 @@ ie_engine_name = st.sidebar.radio(
     )
 
 core = ov.Core()
+devices = core.available_devices
 
+dev_names = []
+for dev in devices:
+    print ("++++++++++++++++++++++++++")
+    dev_names.append(core.get_property(dev, props.device.full_name))
+    supported_properties = core.get_property(dev, props.supported_properties)
+    indent = len(max(supported_properties, key=len))
+    for property_key in supported_properties:
+        if property_key not in (
+            "SUPPORTED_METRICS",
+            "SUPPORTED_CONFIG_KEYS",
+            "SUPPORTED_PROPERTIES",
+        ):
+            try:
+                property_val = core.get_property(dev, property_key)
+            except TypeError:
+                property_val = "UNSUPPORTED TYPE"
+            print(f"{property_key:<{indent}}: {property_val}")
+
+print("-------------------------------")
+print(dev_names)
 ov_device = st.sidebar.radio(
-    "Select OpenVINO inference device", core.available_devices
+    "Select OpenVINO inference device", core.available_devices, captions=dev_names
     )
 
 ul_model_path=None
