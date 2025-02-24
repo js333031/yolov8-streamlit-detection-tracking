@@ -266,8 +266,10 @@ def play_stored_video(conf, model, settings):
     if st.sidebar.button('Detect Video Objects'):
         try:
             vid_cap = cv2.VideoCapture(
-                str(settings.VIDEOS_DICT.get(source_vid)))
+                str(settings.VIDEOS_DICT.get(source_vid)),
+                cv2.CAP_FFMPEG)
             st_frame = st.empty()
+            vid_cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.CAP_MSMF )
             while (vid_cap.isOpened()):
                 success, image = vid_cap.read()
                 if success:
