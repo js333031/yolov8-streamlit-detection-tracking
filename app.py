@@ -3,6 +3,7 @@ from pathlib import Path
 import PIL
 import openvino as ov
 import openvino.properties as props
+import torch
 
 # External packages
 import streamlit as st
@@ -10,6 +11,9 @@ import streamlit as st
 # Local Modules
 from settings import Settings
 import helper
+
+# Hiding/workaround of a warning/error? as discussed in https://github.com/VikParuchuri/marker/issues/442
+torch.classes.__path__ = []
 
 settings = Settings('yolov8n', 'yolov8n-seg')
 
