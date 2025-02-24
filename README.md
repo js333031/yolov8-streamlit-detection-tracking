@@ -62,6 +62,12 @@ conda activate demo
 *Clone repo, etc:*
 - Clone the repository: `git clone https://github.com/js333031/yolov8-streamlit-detection-tracking.git`
 - Change to the repository directory: `cd yolov8-streamlit-detection-tracking`
+- Install requirements: `pip install -r requirements.txt`
+```bash
+git clone https://github.com/js333031/yolov8-streamlit-detection-tracking.git
+cd yolov8-streamlit-detection-tracking
+pip install -r requirements.txt
+```
 - Download the pre-trained YOLOv8 weights from (<https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt>) and save them to the `weights` directory in the same project.
 - The application can also download the models and convert to OpenVINO format through the UI. When a model name is selected, the model will be downloaded and converted to OpenVINO format
 
