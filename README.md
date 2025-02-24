@@ -69,6 +69,16 @@ conda activate demo
 
 - Run the app with the following command: `streamlit run app.py`
 - The app should open in a new browser window.
+- To disable scrolling detection results:
+```bash
+Windows:
+set YOLO_VERBOSE=False
+streamlit run app.py
+
+Linux:
+export YOLO_VERBOSE=False
+streamlit run app.py
+```
 
 ### DL Model Config
 

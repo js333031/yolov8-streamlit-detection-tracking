@@ -51,8 +51,8 @@ ie_engine_name = st.sidebar.radio(
     )
 
 core = ov.Core()
-devices = core.available_devices
 
+devices = core.available_devices
 dev_names = []
 for dev in devices:
     print ("++++++++++++++++++++++++++")
@@ -72,7 +72,9 @@ for dev in devices:
             print(f"{property_key:<{indent}}: {property_val}")
 
 print("-------------------------------")
-print(dev_names)
+print("OpenVINO devices available: ", devices)
+print("OpenVINO device descriptions: ", dev_names)
+
 ov_device = st.sidebar.radio(
     "Select OpenVINO inference device", core.available_devices, captions=dev_names
     )

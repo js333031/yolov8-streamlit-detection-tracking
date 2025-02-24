@@ -96,8 +96,7 @@ def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=N
         res = model.track(image, conf=conf, persist=True, tracker=tracker)
     else:
         # Predict the objects in the image using the YOLOv8 model
-        print("asdf")
-        res = model.predict(image, conf=conf, device="0", verbose=True)
+        res = model.predict(image, conf=conf, verbose=False)
 
     # # Plot the detected objects on the video frame
     res_plotted = res[0].plot()
@@ -119,7 +118,7 @@ def get_youtube_stream_url(youtube_url):
         return info['url']
 
 
-def play_youtube_video(conf, model):
+def play_youtube_video(conf, model, settings):
     source_youtube = st.sidebar.text_input("YouTube Video url")
     is_display_tracker, tracker = display_tracker_options()
 
@@ -162,7 +161,7 @@ def play_youtube_video(conf, model):
             st.sidebar.error(f"An error occurred: {str(e)}")
 
 
-def play_rtsp_stream(conf, model):
+def play_rtsp_stream(conf, model, settings):
     """
     Plays an rtsp stream. Detects Objects in real-time using the YOLOv8 object detection model.
 
