@@ -7,6 +7,23 @@ import openvino as ov
 import os
 from pathlib import Path
 
+import time
+
+class FpsTracker:
+    def __init__(self):
+        self.fps_start_time = time.time()
+        self.fps=0
+        self.fps_diff_time = 0
+    
+    def get_fps(self):
+        self.fps_end_time = time.time()
+        self.fps_diff_time = self.fps_end_time - self.fps_start_time
+        self.fps = 1 / self.fps_diff_time
+        self.fps_start_time = self.fps_end_time
+        self.fps_text="FPS:{:.2f}".format(self.fps)
+        return self.fps_text
+
+fps_tracker = None
 
 def load_model(model_path):
     """
@@ -73,7 +90,7 @@ def display_tracker_options():
     return is_display_tracker, None
 
 
-def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=None, tracker=None):
+def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=None, tracker=None, fps_tracker=None):
     """
     Display the detected objects on a video frame using the YOLOv8 model.
 
@@ -98,9 +115,18 @@ def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=N
         # Predict the objects in the image using the YOLOv8 model
         res = model.predict(image, conf=conf, verbose=False)
 
+    if fps_tracker is not None:
+        fps_text = fps_tracker.get_fps()
+    else:
+        fps_text = None
+
     # # Plot the detected objects on the video frame
     res_plotted = res[0].plot()
-    st_frame.image(res_plotted,
+    if fps_text is not None:
+        cv2.putText(res_plotted, fps_text, (5, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255), 1)
+    ret, buffer = cv2.imencode('.jpg', res_plotted, [cv2.IMWRITE_JPEG_QUALITY, 50])
+    if ret:
+        st_frame.image(buffer.tobytes(),
                    caption='Detected Video',
                    channels="BGR",
                    use_container_width=True
@@ -130,7 +156,7 @@ def play_youtube_video(conf, model, settings):
         try:
             st.sidebar.info("Extracting video stream URL...")
             stream_url = get_youtube_stream_url(source_youtube)
-
+            fps_tracker = FpsTracker()
             st.sidebar.info("Opening video stream...")
             vid_cap = cv2.VideoCapture(stream_url)
 
@@ -150,7 +176,8 @@ def play_youtube_video(conf, model, settings):
                         st_frame,
                         image,
                         is_display_tracker,
-                        tracker
+                        tracker,
+                        fps_tracker
                     )
                 else:
                     break
@@ -181,6 +208,7 @@ def play_rtsp_stream(conf, model, settings):
     is_display_tracker, tracker = display_tracker_options()
     if st.sidebar.button('Detect Objects'):
         try:
+            fps_tracker = FpsTracker()
             vid_cap = cv2.VideoCapture(source_rtsp)
             st_frame = st.empty()
             while (vid_cap.isOpened()):
@@ -191,7 +219,8 @@ def play_rtsp_stream(conf, model, settings):
                                              st_frame,
                                              image,
                                              is_display_tracker,
-                                             tracker
+                                             tracker,
+                                             fps_tracker
                                              )
                 else:
                     vid_cap.release()
@@ -220,6 +249,7 @@ def play_webcam(conf, model, settings):
     if st.sidebar.button('Detect Objects'):
         try:
             vid_cap = cv2.VideoCapture(source_webcam)
+            fps_tracker = FpsTracker()
             st_frame = st.empty()
             while (vid_cap.isOpened()):
                 success, image = vid_cap.read()
@@ -230,6 +260,7 @@ def play_webcam(conf, model, settings):
                                              image,
                                              is_display_tracker,
                                              tracker,
+                                             fps_tracker
                                              )
                 else:
                     vid_cap.release()
@@ -257,7 +288,7 @@ def play_stored_video(conf, model, settings):
         "Choose a video...", settings.VIDEOS_DICT.keys())
 
     is_display_tracker, tracker = display_tracker_options()
-
+    fps_tracker = FpsTracker()
     with open(settings.VIDEOS_DICT.get(source_vid), 'rb') as video_file:
         video_bytes = video_file.read()
     if video_bytes:
@@ -269,7 +300,8 @@ def play_stored_video(conf, model, settings):
                 str(settings.VIDEOS_DICT.get(source_vid)),
                 cv2.CAP_FFMPEG)
             st_frame = st.empty()
-            vid_cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.CAP_MSMF )
+            #vid_cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.CAP_MSMF )
+            #vid_cap.set(cv2.CAP_PROP_HW_ACCELERATION, cv2.CAP_VAAPI )
             while (vid_cap.isOpened()):
                 success, image = vid_cap.read()
                 if success:
@@ -279,6 +311,7 @@ def play_stored_video(conf, model, settings):
                                              image,
                                              is_display_tracker,
                                              tracker,
+                                             fps_tracker
                                              )
                 else:
                     vid_cap.release()
