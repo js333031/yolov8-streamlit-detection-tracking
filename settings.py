@@ -4,7 +4,7 @@ import sys
 from ultralytics import YOLO
 
 class Settings:
-    def __init__(self, default_det_model_name, default_seg_model_name):
+    def __init__(self, st, default_det_model_name, default_seg_model_name):
         # Get the absolute path of the current file
         self.FILE = Path(__file__).resolve()
         # Get the parent directory of the current file
@@ -55,6 +55,9 @@ class Settings:
         # Webcam
         self.WEBCAM_PATH = 0
 
+        # save a reference to the streamlit app view
+        self.st = st
+
     def update_model_names(self, NEW_MODEL_NAME):
         self.DETECTION_MODEL_FILENAME = NEW_MODEL_NAME
         self.DETECTION_MODEL = Path.joinpath(self.MODEL_DIR,self.DETECTION_MODEL_FILENAME + '.pt')
@@ -71,8 +74,10 @@ class Settings:
 
     def convert_modelto_ov(self, model_path, ul_model_path):
         if not model_path.exists():
-            model = YOLO(ul_model_path)
-            model.export(format="openvino", dynamic=True, half=False)
+            with self.st.spinner(f"Downloading & converting {ul_model_path} model to OpenVINO"):
+                model = YOLO(ul_model_path)
+                model.export(format="openvino", dynamic=True, half=False)
+            self.st.write(f"Finished model {ul_model_path} download & conversion")
 
     def print_model_names(self):
         print(f"Model Root path: {self.ROOT}")

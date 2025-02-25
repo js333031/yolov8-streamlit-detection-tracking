@@ -52,6 +52,12 @@ pip install -r requirements.txt
 
 ## Installation
 
+*Ubuntu packages:*
+sudo apt-get install ffmpeg libgl1-mesa-dev
+
+*Windows*
+Install ffmpeg and add it to system path
+
 *Setup venv:*
 ```bash
 conda create -n demo python=3.11

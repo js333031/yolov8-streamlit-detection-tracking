@@ -15,7 +15,7 @@ import helper
 # Hiding/workaround of a warning/error? as discussed in https://github.com/VikParuchuri/marker/issues/442
 torch.classes.__path__ = []
 
-settings = Settings('yolov8n', 'yolov8n-seg')
+
 
 # Setting page layout
 st.set_page_config(
@@ -28,8 +28,10 @@ st.set_page_config(
 # Main page heading
 st.title("Object Detection And Tracking using YOLO v8/11")
 
+settings = Settings(st, 'yolov8n', 'yolov8n-seg')
+
 # Sidebar
-st.sidebar.header("ML Model Config")
+st.sidebar.header("DL Model Config")
 
 model_selection = st.sidebar.selectbox(
         "Choose a model...", settings.MODEL_NAMES)
